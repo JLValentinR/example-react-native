@@ -77,3 +77,22 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+
+Pasos para generar el apk:
+ir a la raiz del proyecto react-native
+ *Agrupe su js:*
+
+Terminal:
+react-native bundle --dev false --platform android --entry-file index.js --bundle-output ./android/app/build/intermediates/assets/debug/index.android.bundle --assets-dest ./android/app/build/intermediates/res/merged/debug
+
+*Crear depuración apk:*
+
+Terminal:
+cd android/
+Terminal:
+./gradlew assembleDebug
+
+*Entonces puedes encontrar tu apk aquí:*
+
+Terminal:
+cd app/build/outputs/apk/

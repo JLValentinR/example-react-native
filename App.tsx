@@ -1,118 +1,138 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, {useState, useEffect} from 'react';
+import { StyleSheet, ScrollView , View , Text, Image, TextInput, Dimensions } from 'react-native';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+function App(){
+    const [text, onChangeText] = useState('');
+    const [data, setData] = useState({ results: [] });
+    const [windowHeight, setWindowHeight] = useState();
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+    const initialPeticion = (word) => {
+      const response = fetch('https://api.mercadolibre.com/sites/MLA/search?q=' + word, {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'}
+        }).then((response) => response.json())
+      .then((responseJson) => {
+        setData(responseJson);
+      })
+      .catch((error) => {
+        console.error('error', error);
+      });
+    }
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+    const inputText = (event : string) => {
+      onChangeText(event)
+    }
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+    const SearchWord = () => {
+      setData({ results: [] })
+      initialPeticion(text)
+    }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+    useEffect(()=>{
+      initialPeticion('consolas')
+      determineAndSetOrientation();
+      Dimensions.addEventListener('change', determineAndSetOrientation);
+    },[]);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+    const convertidor = (value : number) => {
+      return value / 48.95
+    }
+    
+    // Orientación de la pantalla
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+    const determineAndSetOrientation = () => {
+      let width = Dimensions.get('window').width;
+      let height = Dimensions.get('window').height;
+  
+      if (width < height) {
+          setWindowHeight(Dimensions.get('window').height - 110);
+        } else {
+          setWindowHeight(Dimensions.get('window').height - 140);
+        }
+    }
+    
+    const listProductos = data.results.map((element, index)=>(
+      <View key={index} style={{ width: '100%', height: 120, display: 'flex', flexDirection: 'row', paddingLeft: 10, paddingRight: 10, paddingTop: 10 }}>
+        <View style={{ width: '25%' }}>
+          <Image
+            style={styles.tinyLogo}
+            source={{
+              uri: element.thumbnail,
+            }}
+          />
         </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+        <View style={{ width: '75%', paddingLeft: 10, paddingRight: 10 }}>
+          <Text style={styles.textTitle}>{element.title}</Text>
+          <Text style={styles.textSeller}>Vendedor: {element.seller.nickname}</Text>
+          <Text style={styles.txetPrice}>Precio: $ {convertidor(element.price).toLocaleString('MXN')}</Text>
+        </View>
+      </View>
+    ))
+    return (
+      <View>
+        <View style={styles.backInput}>
+          <Text style={styles.textAuthor}>SWEAGHE</Text>
+          <TextInput
+            style={styles.input}
+            onChangeText={inputText}
+            onSubmitEditing={SearchWord}
+            value={text}
+            placeholder='Ingresa una keyword'
+          />
+        </View>
+        <ScrollView style={{ height: windowHeight }}>
+          { data.results.length > 0 ? listProductos : <Text style={styles.textCenter}>Buscando Productos ...</Text> }
+        </ScrollView>
+      </View>
+    );
+  }
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
+  const styles = StyleSheet.create({
+    textAuthor: {
+      textAlign: 'center',
+      fontSize: 25,
+      fontWeight: 'bold',
+      color: '#5D6D7E',
+      marginTop: 10,
+    },
+    backInput: {
+      backgroundColor: '#5DADE2'
+    },
+    input: {
+      height: 40,
+      marginLeft: 12,
+      marginRight: 12,
+      marginTop: 10,
+      marginBottom: 15,
+      borderWidth: 0,
+      padding: 10,
+      backgroundColor: 'white',
+      fontSize: 20
+    },
+    tinyLogo: {
+      width: 100,
+      height: 100
+    },
+    textTitle: {
+      height: 45,
+      fontSize: 20,
+      fontWeight: 'bold'
+    },
+    txetPrice: {
+      fontSize: 17,
+      fontWeight: 'bold',
+      color: 'green'
+    },
+    textSeller: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: 'coral'
+    },
+    textCenter:{
+      marginTop: 10,
+      textAlign: 'center',
+      fontSize: 18,
+      fontWeight: 'bold'
+    }
+  })
 export default App;
